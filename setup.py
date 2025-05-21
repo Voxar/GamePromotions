@@ -9,6 +9,7 @@ setup(
         'python-dotenv>=1.0.0',
         'jmespath>=1.0.1',
         'discord-webhook>=1.2.1',
+        'pymongo>=4.0.0',
     ],
     python_requires='>=3.8',
     entry_points={

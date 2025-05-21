@@ -1,12 +1,12 @@
 from typing import Optional, List, Dict, Any
 import requests
 from datetime import datetime
-from models.games import Games
+from models.game import Game
 
 class DiscordWebhookError(Exception):
     pass
 
-def create_embed(game: object) -> Dict[str, Any]:
+def create_embed(game: Game) -> Dict[str, Any]:
     """Create a Discord embed for a single game."""
     embed = {
         "title": game.title,
@@ -36,13 +36,13 @@ def create_embed(game: object) -> Dict[str, Any]:
     
     return embed
 
-def send_to_discord_webhook(webhook_url: str, games: Games) -> bool:
+def send_to_discord_webhook(webhook_url: str, games: List[Game]) -> bool:
     """
     Send a list of games to a Discord webhook.
     
     Args:
         webhook_url: The Discord webhook URL
-        games: A Games object containing the games to send
+        games: A list of Game objects containing the games to send
         
     Returns:
         bool: True if the message was sent successfully, False otherwise
@@ -51,8 +51,8 @@ def send_to_discord_webhook(webhook_url: str, games: Games) -> bool:
         raise ValueError("Webhook URL is required")
     
     # Split games into free and discounted
-    free_games = games.free
-    discounted_games = games.discounted
+    free_games = [game for game in games if game.is_free]
+    discounted_games = [game for game in games if game.is_discounted]
     
     # Prepare embeds
     embeds = []

@@ -11,6 +11,7 @@ class Game:
         self.valid_until = ""
         self.source = ""
         self.image_url = ""
+        self._posted = False  # Track if this game has been posted
 
     def _parse_price(self, price_str):
         if not price_str:
@@ -40,6 +41,10 @@ class Game:
     @property
     def discount_percentage(self):
         return float(self._discount_percentage or (self.price / self.original_price) * 100)
+
+    @property
+    def id(self):
+        return self.url
     
     def __repr__(self):
         return f"Game: '{self.title}'"
