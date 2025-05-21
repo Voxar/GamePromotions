@@ -1,11 +1,12 @@
+from typing import List
 from models.game import Game
 
 # Model for a list of games
 class Games:
     def __init__(self):
-        self.games = [Game]
+        self.games: List[Game] = []
     
-    def add(self, games: [Game]):
+    def add(self, games: List[Game]):
         self.games.extend(games)
     
     def __repr__(self):
@@ -19,8 +20,8 @@ class Games:
 
     @property
     def discounted(self):
-        return [game for game in self.games if game.discount_percentage > 0]
+        return [game for game in self.games if (game.discount_percentage) > 0]
 
     @property
     def free(self):
-        return [game for game in self.games if game.price == 0]
+        return [game for game in self.games if (game.price) == 0]

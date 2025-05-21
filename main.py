@@ -7,7 +7,7 @@ from models.games import Games
 
 def main():
     load_dotenv()
-    discord_webhook = os.getenv("DISCORD_WEBHOOK_URL")
+    discord_webhooks = os.getenv("DISCORD_WEBHOOK_URL")
     epic_games_url = os.getenv("EPIC_GAMES_PROMOTIONS")
 
     games = Games()
@@ -30,10 +30,10 @@ def main():
             print(game)
         
         # Send to Discord
-        if discord_webhook:
+        if discord_webhooks:
             from destinations.discord import send_to_discord_webhook
 
-            send_to_discord_webhook(discord_webhook, games)
+            send_to_discord_webhook(discord_webhooks, games)
 
         # Add more destinations here
     else:

@@ -22,6 +22,14 @@ class Game:
             return 0.0
             
     @property
+    def is_free(self):
+        return self.price == 0
+
+    @property
+    def is_discounted(self):
+        return self.price < self.original_price
+    
+    @property
     def price(self):
         return self._parse_price(self._discount_price or self._original_price)
 
