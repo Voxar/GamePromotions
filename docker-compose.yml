@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  epic-free-games:
+    build: .
+    environment:
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - EPIC_GAMES_PROMOTIONS=${EPIC_GAMES_PROMOTIONS:-https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions}
+    # Uncomment to run on a schedule (e.g., every 6 hours)
+    # deploy:
+    #   restart_policy:
+    #     condition: on-failure
+    #     delay: 5s
+    #     max_attempts: 3
+    #     window: 120s
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 256M

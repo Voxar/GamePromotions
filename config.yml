@@ -1,0 +1,6 @@
+free_games_url: "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions"
+discord:
+  webhooks: 
+    - "https://discord.com/api/webhooks/1374785188227448954/cigYXEU4D_zatSFQXmLJbmuWwc32oNyV01TQhHRzOo1Bd616QpzetiJn0VIsHxIr_aSV"
+  
+  
