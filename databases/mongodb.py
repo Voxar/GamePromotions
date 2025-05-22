@@ -31,8 +31,12 @@ class MongoDB:
             self.client.server_info()
             self.db = self.client[db_name]
             self.posted_games = self.db.posted_games
-            # Create index on game_id for faster lookups
-            self.posted_games.create_index('game_id', unique=True)
+            # Create a unique compound index on (game_id, valid_until, service)
+            self.posted_games.create_index([
+                ('game_id', 1),
+                ('valid_until', 1),
+                ('service', 1)
+            ], unique=True)
         except Exception as e:
             raise MongoDBError(f"Failed to connect to MongoDB: {str(e)}")
     
