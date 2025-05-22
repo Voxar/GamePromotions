@@ -27,4 +27,5 @@ jobs:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
         EPIC_GAMES_PROMOTIONS: ${{ secrets.EPIC_GAMES_PROMOTIONS }}
+        STEAM_PROMOTIONS: ${{ secrets.STEAM_PROMOTIONS }}
       run: python main.py

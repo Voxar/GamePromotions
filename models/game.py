@@ -12,6 +12,8 @@ class Game:
         self.source = ""
         self.image_url = ""
         self._posted = False  # Track if this game has been posted
+        self.currency = ""
+        self.free_to_play = False
 
     def _parse_price(self, price_str):
         if not price_str:
@@ -40,6 +42,8 @@ class Game:
 
     @property
     def discount_percentage(self):
+        if self.original_price == 0:
+            return 0
         return float(self._discount_percentage or (self.price / self.original_price) * 100)
 
     @property
@@ -60,22 +64,25 @@ class Game:
         
         lines.append(f"  {self.description[:100]}..." if self.description else "")
 
-        lines.append(f"  Price: {self._original_price}")
+        if self.free_to_play:
+            lines.append(f"  Price: Free to play")
+        else:
+            lines.append(f"  Price: {self.price} {self.currency}")
         
-        if hasattr(self, 'discount_price') and self._discount_price:
-            lines.append(f"  New Price: {self._discount_price}")
+            if hasattr(self, 'discount_price') and self.discount_price:
+                lines.append(f"  New Price: {self.discount_price} {self.currency}")
 
-        if hasattr(self, 'discount_percentage') and float(self._discount_percentage or 0) > 0:
-            lines.append(f"  Discount: {self._discount_percentage}% off")
+            if hasattr(self, 'discount_percentage') and self.discount_percentage > 0:
+                lines.append(f"  Discount: {self.discount_percentage}% off")
 
         # Add valid until information if available
         if hasattr(self, 'valid_until') and self.valid_until:
             lines.append(f"  Offer ends: {self.valid_until}")
 
         if hasattr(self, 'url') and self.url:
-            lines.append(f"  {self.url}")
+            lines.append(f"  Url: {self.url}")
 
         if hasattr(self, 'image_url') and self.image_url:
-            lines.append(f"  {self.image_url}")
+            lines.append(f"  Image: {self.image_url}")
             
         return '\n'.join(line for line in lines if line)

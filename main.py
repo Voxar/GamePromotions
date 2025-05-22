@@ -1,17 +1,19 @@
-import requests
 import os
-from datetime import datetime
-from typing import Dict, List, Any
 from dotenv import load_dotenv
 from models.games import Games
-from databases.mongodb import MongoDB
+
 
 def main():
     load_dotenv()
-    discord_webhooks = (os.getenv("DISCORD_WEBHOOK_URL") or "").split(";")
+    discord_webhooks = [e for e in (os.getenv("DISCORD_WEBHOOK_URL") or "").split(";") if len(e) > 0]
     epic_games_url = os.getenv("EPIC_GAMES_PROMOTIONS")
+    steam_games_url = os.getenv("STEAM_PROMOTIONS")
 
-    db = MongoDB() if os.getenv("MONGODB_URI") else None
+    db = None
+    if os.getenv("MONGODB_URI"):
+        print("Using MongoDB", os.getenv("MONGODB_URI"))
+        from databases.mongodb import MongoDB
+        db = MongoDB()
     
     games = Games()
 
@@ -19,22 +21,33 @@ def main():
         from sources.epic_games import get_epic_games_promotions
         games.add(get_epic_games_promotions(epic_games_url))
 
+    if steam_games_url:
+        from sources.steam import load_promoted_games
+        games.add(load_promoted_games(steam_games_url))
+
     # Add more sources here
     
     if games:
         # Print to console
+        if games.count == 0:
+            print("No games found")
+            return
         
-        print("Discounted")
-        for game in games.discounted:
+        discounted = games.discounted_more_than(50)
+        discounted.sort(key=lambda x: x.discount_percentage, reverse=True)
+        print(len(discounted), "Discounted")
+        for game in discounted:
             print(game)
 
-        print("Free")
-        for game in games.free:
+        free = games.free
+        print(len(free), "Free")
+        for game in free:
             print(game)
         
         # Send to Discord
         if discord_webhooks and len(discord_webhooks) > 0:
-            games_to_send = games.free + games.discounted
+            print("Sending to Discord", discord_webhooks)
+            games_to_send = free + discounted
             if db:
                 games_to_send = [game for game in games_to_send if not db.is_game_posted(game.id, 'discord')]
                 for game in games_to_send:

@@ -19,9 +19,20 @@ class Games:
         return iter(self.games)
 
     @property
+    def count(self):
+        return len(self.games)
+
+    @property
     def discounted(self):
         return [game for game in self.games if (game.discount_percentage) > 0]
+    
+    def discounted_more_than(self, percentage: int):
+        return [game for game in self.games if (game.discount_percentage) > percentage]
 
     @property
     def free(self):
-        return [game for game in self.games if (game.price) == 0]
+        return [game for game in self.games if game.is_free and not game.free_to_play]
+    
+    @property
+    def free_always(self):
+        return [game for game in self.games if game.free_to_play]
