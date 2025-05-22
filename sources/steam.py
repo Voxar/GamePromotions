@@ -48,9 +48,10 @@ def parse_steam_promoted_games(data: str) -> List[Game]:
             discount_exp = item.get('discount_expiration')
             if discount_exp:
                 try:
-                    # Steam gives unix timestamp; convert to ISO8601
-                    dt = datetime.utcfromtimestamp(int(discount_exp))
-                    game.valid_until = dt.isoformat() + 'Z'
+                    from datetime import timezone
+                    # Steam gives unix timestamp; convert to UTC-aware ISO8601
+                    dt = datetime.fromtimestamp(int(discount_exp), tz=timezone.utc)
+                    game.valid_until = dt.isoformat()  # e.g. '2025-05-25T17:00:00+00:00'
                 except Exception:
                     game.valid_until = ''
             games.append(game)

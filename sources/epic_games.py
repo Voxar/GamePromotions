@@ -123,13 +123,16 @@ def get_epic_games_promotions(json_url: str) -> List[Game]:
                 end_date = jmespath.search('endDate', best_offer)
                 if end_date:
                     try:
-                        # Convert to ISO format if it's not already
+                        from datetime import timezone
+                        # If it's already in ISO format with 'Z', convert to UTC-aware ISO string
                         if 'T' in end_date:
-                            game.valid_until = end_date
+                            dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                            game.valid_until = dt.isoformat()
                         else:
                             # Handle different date formats if needed
                             dt = datetime.strptime(end_date, '%Y-%m-%d')
-                            game.valid_until = dt.isoformat() + 'Z'
+                            dt = dt.replace(tzinfo=timezone.utc)
+                            game.valid_until = dt.isoformat()
                     except (ValueError, TypeError):
                         game.valid_until = ''
             else:
