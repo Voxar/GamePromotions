@@ -4,6 +4,9 @@ import jmespath
 from datetime import datetime
 from models.game import Game
 
+icon = "https://cdn.iconscout.com/icon/premium/png-512-thumb/epic-games-7521453-7197026.png"
+store = "Epic"
+
 def get_epic_games_promotions(json_url: str) -> List[Game]:
     """
     Fetches and processes free games from the Epic Games Store API.
@@ -99,6 +102,8 @@ def get_epic_games_promotions(json_url: str) -> List[Game]:
             
             # Create Game object with all fields
             game = Game()
+            game.source_icon = icon
+            game.store = store
             game.title = title
             game.description = description
             game.url = url

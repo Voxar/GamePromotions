@@ -8,10 +8,16 @@ class DiscordWebhookError(Exception):
 
 def create_embed(game: Game) -> Dict[str, Any]:
     """Create a Discord embed for a single game."""
+    
+    description = game.description
+    if description == game.title:
+        description = ""
+    if len(description) > 200:
+        description = description[:200] + '...'
     embed = {
         "title": game.title,
         "url": game.url,
-        "description": (game.description[:200] + ('...' if len(game.description) > 200 else '')) if game.description else "No description available",
+        "description": description,
         "color": 0x57F287 if game.is_free else 0x5865F2, 
         "fields": [
             {"name": "Price", "value": f"{'**Free**' if game.is_free else game.price}", "inline": True}
@@ -21,6 +27,8 @@ def create_embed(game: Game) -> Dict[str, Any]:
     # Add discount percentage if available
     if hasattr(game, 'discount_percentage') and game.discount_percentage:
         embed["fields"].append({"name": "Discount", "value": f"{game.discount_percentage:.0f}% off", "inline": True})
+        
+    embed["fields"].append({"name": "Store", "value": game.store, "inline": True})
     
     # Add valid until if available
     if hasattr(game, 'valid_until') and game.valid_until:

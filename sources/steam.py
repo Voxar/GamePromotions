@@ -5,6 +5,10 @@ from models.games import Games
 import json
 import requests
 
+
+icon = "https://steamcommunity.com/favicon.ico"
+store = "Steam"
+
 def load_promoted_games(featured_url: str = "https://store.steampowered.com/api/featuredcategories") -> List[Game]:
     response = requests.get(featured_url)
     return parse_steam_promoted_games(response.text)
@@ -26,6 +30,8 @@ def parse_steam_promoted_games(data: str) -> List[Game]:
             continue
         for item in section['items']:
             game = Game()
+            game.store = store
+            game.source_icon = icon
             game.title = item.get('name', '')
             game.description = item.get('body', '')
             game.url = "https://store.steampowered.com/app/" + str(item.get('id', ''))
