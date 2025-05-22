@@ -36,36 +36,38 @@ class MongoDB:
         except Exception as e:
             raise MongoDBError(f"Failed to connect to MongoDB: {str(e)}")
     
-    def is_game_posted(self, game_id: str, service: str) -> bool:
-        """Check if a game has been posted.
+    def is_game_posted(self, game_id: str, valid_until: str, service: str) -> bool:
+        """Check if a game has been posted for a specific promotion period.
         
         Args:
             game_id: The unique identifier of the game.
+            valid_until: The promotion end time (ISO8601 string).
             service: The service to check (e.g., 'discord').
-            
         Returns:
-            bool: True if the game has been posted, False otherwise.
+            bool: True if the game has been posted for this promotion period, False otherwise.
         """
         try:
-            return bool(self.posted_games.find_one({"game_id": game_id, "service": service}))
+            return bool(self.posted_games.find_one({"game_id": game_id, "valid_until": valid_until, "service": service}))
         except PyMongoError as e:
             raise MongoDBError(f"Error checking if game is posted: {str(e)}")
     
-    def mark_game_as_posted(self, game_id: str, title: str, service: str) -> None:
-        """Mark a game as posted.
+    def mark_game_as_posted(self, game_id: str, title: str, valid_until: str, service: str) -> None:
+        """Mark a game as posted for a specific promotion period.
         
         Args:
             game_id: The unique identifier of the game.
             title: The title of the game.
+            valid_until: The promotion end time (ISO8601 string).
             service: The service where the game was posted (e.g., 'discord').
         """
         try:
             self.posted_games.update_one(
-                {"game_id": game_id, "service": service},
+                {"game_id": game_id, "valid_until": valid_until, "service": service},
                 {
                     "$set": {
                         "title": title,
                         "service": service,
+                        "valid_until": valid_until,
                         "posted_at": datetime.utcnow(),
                         "last_updated": datetime.utcnow()
                     },
