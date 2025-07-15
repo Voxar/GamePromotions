@@ -40,8 +40,15 @@ def parse_steam_promoted_games(data: str) -> List[Game]:
             # Price info
             if item.get('original_price') == None:
                 game.free_to_play = True
-            game._original_price = str(item.get('original_price', ''))
-            game._discount_price = str(item.get('final_price', ''))
+            # Convert from cents to standard currency units (e.g., 1400 -> 14.00)
+            if item.get('original_price') is not None:
+                game._original_price = str(item.get('original_price') / 100)
+            else:
+                game._original_price = ""
+            if item.get('final_price') is not None:
+                game._discount_price = str(item.get('final_price') / 100)
+            else:
+                game._discount_price = ""
             game._discount_percentage = str(item.get('discount_percent', ''))
             game.currency = item.get('currency', '')
             # Valid until (if present as a timestamp)
