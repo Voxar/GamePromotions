@@ -51,7 +51,14 @@ def main():
             if db:
                 games_to_send = [game for game in games_to_send if not db.is_game_posted(getattr(game, 'id', game.title), getattr(game, 'valid_until', ''), 'discord')]
                 for game in games_to_send:
-                    db.mark_game_as_posted(getattr(game, 'id', game.title), game.title, getattr(game, 'valid_until', ''), "discord")
+                    db.mark_game_as_posted(
+                        getattr(game, 'id', game.title),
+                        game.title,
+                        getattr(game, 'valid_until', ''),
+                        "discord",
+                        getattr(game, 'original_price', None),
+                        getattr(game, 'price', None)
+                    )
             from destinations.discord import send_to_discord_webhook
             for webhook in discord_webhooks:
                 send_to_discord_webhook(webhook, games_to_send)

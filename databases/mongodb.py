@@ -55,26 +55,33 @@ class MongoDB:
         except PyMongoError as e:
             raise MongoDBError(f"Error checking if game is posted: {str(e)}")
     
-    def mark_game_as_posted(self, game_id: str, title: str, valid_until: str, service: str) -> None:
-        """Mark a game as posted for a specific promotion period.
+    def mark_game_as_posted(self, game_id: str, title: str, valid_until: str, service: str, original_price: float = None, discount_price: float = None) -> None:
+        """Mark a game as posted for a specific promotion period, including price info.
         
         Args:
             game_id: The unique identifier of the game.
             title: The title of the game.
             valid_until: The promotion end time (ISO8601 string).
             service: The service where the game was posted (e.g., 'discord').
+            original_price: The original price of the game (optional).
+            discount_price: The discounted price of the game (optional).
         """
         try:
+            set_fields = {
+                "title": title,
+                "service": service,
+                "valid_until": valid_until,
+                "posted_at": datetime.utcnow(),
+                "last_updated": datetime.utcnow()
+            }
+            if original_price is not None:
+                set_fields["original_price"] = original_price
+            if discount_price is not None:
+                set_fields["discount_price"] = discount_price
             self.posted_games.update_one(
                 {"game_id": game_id, "valid_until": valid_until, "service": service},
                 {
-                    "$set": {
-                        "title": title,
-                        "service": service,
-                        "valid_until": valid_until,
-                        "posted_at": datetime.utcnow(),
-                        "last_updated": datetime.utcnow()
-                    },
+                    "$set": set_fields,
                     "$setOnInsert": {
                         "first_posted": datetime.utcnow()
                     }
