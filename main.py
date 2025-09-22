@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import sentry_sdk
+from sentry_sdk.crons import monitor
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ sentry_sdk.init(
 from models.games import Games
 import logging
 
-
+@monitor(monitor_slug='gha-gamepromotions')
 def main():
     discord_webhooks = [e for e in (os.getenv("DISCORD_WEBHOOK_URL") or "").split(";") if len(e) > 0]
     epic_games_url = os.getenv("EPIC_GAMES_PROMOTIONS")
