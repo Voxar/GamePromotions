@@ -3,6 +3,10 @@ import requests
 import jmespath
 from datetime import datetime
 from models.game import Game
+import sentry_sdk
+import logging
+
+logger = logging.getLogger(__name__)
 
 icon = "https://cdn.iconscout.com/icon/premium/png-512-thumb/epic-games-7521453-7197026.png"
 store = "Epic"
@@ -144,5 +148,6 @@ def get_epic_games_promotions(json_url: str) -> List[Game]:
         return games
         
     except Exception as e:
-        print(f"Error fetching Epic Games promotions: {e}")
+        logger.error(f"Error fetching Epic Games promotions: {e}")
+        sentry_sdk.capture_exception(e)
         return []

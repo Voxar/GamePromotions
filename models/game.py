@@ -1,7 +1,15 @@
 
 # Model for a single game
 class Game:
+    """
+    Game model. Unique identifier strategies:
+    - game_id: store + store-specific id (e.g., steam_570)
+    - cross_store_id: (optional) hash of title+developer+release_year for cross-store analytics
+    """
     def __init__(self):
+        self.store = ""
+        self.store_game_id = ""  # Store-specific id (e.g., Steam app id)
+        # ... other fields as before
         self.title = ""
         self.description = ""
         self.url = ""
@@ -25,16 +33,50 @@ class Game:
             return 0.0
             
     @property
+    def currency_symbol(self):
+        symbols = {
+            "USD": "$",
+            "EUR": "€",
+            "GBP": "£",
+            "JPY": "¥",
+            "SEK": "kr",
+            # Add more currency codes and their symbols as needed
+        }
+        return symbols.get(self.currency.upper(), self.currency)
+    @property
     def is_free(self):
         return self.price == 0
 
     @property
     def is_discounted(self):
-        return self.price < self.original_price
+        return self.price < self.original_price and not self.is_free
     
+    @property
+    def game_id(self):
+        """
+        Returns a unique id for this game within a store, e.g., 'steam_570'.
+        """
+        return f"{self.store.lower()}_{self.store_game_id}"
+
+    @property
+    def cross_store_id(self):
+        """
+        Returns a cross-store id (hash of title+developer+release_year). Placeholder for now.
+        """
+        # Example: return hash(f"{self.title.lower()}_{self.developer.lower()}_{self.release_year}")
+        return None
+
     @property
     def price(self):
         return self._parse_price(self._discount_price or self._original_price)
+    
+    @property
+    def price_with_currency(self):
+        price = self.price
+        if price == 0:
+            return "Free"
+        symbol = self.currency_symbol or self.currency
+        return f"{symbol}{price:.2f}"
 
     @property
     def original_price(self):

@@ -3,3 +3,4 @@ python-dotenv==1.0.0
 discord-webhook==1.2.1
 jmespath>=1.0.1
 pymongo>=4.0.0
+sentry-sdk>=2.38.0

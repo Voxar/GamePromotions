@@ -43,14 +43,18 @@ docker run --rm \
 
 ## Running Locally (Without Docker)
 
-1. Install Python 3.8+
+1. Install Python 3.8+ and optionally setup a venv
+   ```bash
+   asdf install
+   python -m venv .venv
+   ```
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 3. Run the script:
    ```bash
-   python epic_free_games.py
+   python main.py
    ```
 
 ## Configuration

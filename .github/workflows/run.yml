@@ -28,4 +28,5 @@ jobs:
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
         EPIC_GAMES_PROMOTIONS: ${{ secrets.EPIC_GAMES_PROMOTIONS }}
         STEAM_PROMOTIONS: ${{ secrets.STEAM_PROMOTIONS }}
+        SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       run: python main.py

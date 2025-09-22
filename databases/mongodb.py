@@ -6,12 +6,38 @@ from pymongo.errors import PyMongoError
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MongoDBError(Exception):
     """Custom exception for MongoDB related errors."""
     pass
 
 class MongoDB:
+    def record_game_event(self, game_id: str, event_type: str, old_value: dict, new_value: dict, metadata: dict = None):
+        """
+        Record an event for a game (event sourcing).
+        Args:
+            game_id: Unique game identifier (e.g., 'steam_570')
+            event_type: Type of event (e.g., 'price_change', 'discount_change')
+            old_value: Previous state (dict)
+            new_value: New state (dict)
+            metadata: Optional dict with extra info (e.g., store, timestamp, etc.)
+        """
+        try:
+            event_doc = {
+                "game_id": game_id,
+                "event_type": event_type,
+                "event_time": datetime.utcnow(),
+                "old_value": old_value,
+                "new_value": new_value,
+                "metadata": metadata or {}
+            }
+            self.db.game_events.insert_one(event_doc)
+        except PyMongoError as e:
+            raise MongoDBError(f"Error recording game event: {str(e)}")
+
     """MongoDB wrapper for tracking posted games."""
     
     def __init__(self, connection_string: str = None, db_name: str = "epic_games"):
@@ -51,6 +77,7 @@ class MongoDB:
             bool: True if the game has been posted for this promotion period, False otherwise.
         """
         try:
+            logger.debug(f"Checking if game {game_id} with valid_until {valid_until} has been posted to {service}")
             return bool(self.posted_games.find_one({"game_id": game_id, "valid_until": valid_until, "service": service}))
         except PyMongoError as e:
             raise MongoDBError(f"Error checking if game is posted: {str(e)}")
