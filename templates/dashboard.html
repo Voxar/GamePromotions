@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Promotions Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .last-updated {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .stat-value.large {
+            font-size: 2.5rem;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        canvas {
+            max-height: 400px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-state h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .empty-state p {
+            color: #b0b0b0;
+            font-size: 1.1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .chart-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Game Promotions Statistics</h1>
+            <p class="last-updated">Last updated: {{ last_updated }}</p>
+        </header>
+
+        {% if has_data %}
+        <section class="summary">
+            <div class="stat-card">
+                <div class="stat-label">Total Games</div>
+                <div class="stat-value large">{{ summary_stats.total_games }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Free Games</div>
+                <div class="stat-value">{{ summary_stats.free_games }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Discounted Games</div>
+                <div class="stat-value">{{ summary_stats.discounted_games }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Discount</div>
+                <div class="stat-value">{{ summary_stats.avg_discount }}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Date Range</div>
+                <div class="stat-value" style="font-size: 1.2rem;">{{ summary_stats.earliest_date }} to {{ summary_stats.latest_date }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Days Tracked</div>
+                <div class="stat-value">{{ summary_stats.days_of_data }}</div>
+            </div>
+        </section>
+
+        <section class="charts">
+            <div class="chart-container">
+                <h3 class="chart-title">Free Games Over Time</h3>
+                <canvas id="freeGamesChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Discount Distribution</h3>
+                <canvas id="discountDistChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Average Discount Over Time</h3>
+                <canvas id="avgDiscountChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Games by Store</h3>
+                <canvas id="storeDistChart"></canvas>
+            </div>
+        </section>
+        {% else %}
+        <section class="empty-state">
+            <h2>No Data Available Yet</h2>
+            <p>Statistics will appear after the first game check runs. Check back soon!</p>
+        </section>
+        {% endif %}
+
+        <footer>
+            <p>Generated from <a href="https://github.com/Voxar/GamePromotions" target="_blank">GamePromotions</a> MongoDB data</p>
+        </footer>
+    </div>
+
+    {% if has_data %}
+    <script>
+        // Embedded JSON data from Jinja2
+        const freeGamesData = {{ free_games_data | tojson }};
+        const discountDistData = {{ discount_dist_data | tojson }};
+        const avgDiscountData = {{ avg_discount_data | tojson }};
+        const storeDistData = {{ store_dist_data | tojson }};
+
+        // Chart.js default configuration
+        Chart.defaults.color = '#e0e0e0';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+        // Chart 1: Free Games Over Time (Line Chart)
+        const freeGamesCtx = document.getElementById('freeGamesChart');
+        if (freeGamesCtx) {
+            new Chart(freeGamesCtx, {
+                type: 'line',
+                data: {
+                    labels: freeGamesData.labels,
+                    datasets: [{
+                        label: 'Free Games Posted',
+                        data: freeGamesData.values,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 10,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Discount Distribution (Bar Chart)
+        const discountDistCtx = document.getElementById('discountDistChart');
+        if (discountDistCtx) {
+            new Chart(discountDistCtx, {
+                type: 'bar',
+                data: {
+                    labels: discountDistData.labels,
+                    datasets: [{
+                        label: 'Number of Games',
+                        data: discountDistData.values,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(102, 126, 234, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(255, 159, 64)',
+                            'rgb(255, 205, 86)',
+                            'rgb(75, 192, 192)',
+                            'rgb(102, 126, 234)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' games';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Average Discount Over Time (Line Chart)
+        const avgDiscountCtx = document.getElementById('avgDiscountChart');
+        if (avgDiscountCtx) {
+            new Chart(avgDiscountCtx, {
+                type: 'line',
+                data: {
+                    labels: avgDiscountData.labels,
+                    datasets: [{
+                        label: 'Average Discount %',
+                        data: avgDiscountData.values,
+                        borderColor: 'rgb(255, 159, 64)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        yAxisID: 'y'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 10,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 4: Games by Store (Doughnut Chart)
+        const storeDistCtx = document.getElementById('storeDistChart');
+        if (storeDistCtx) {
+            new Chart(storeDistCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: storeDistData.labels,
+                    datasets: [{
+                        label: 'Games by Store',
+                        data: storeDistData.values,
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(118, 75, 162, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(75, 192, 192, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(102, 126, 234)',
+                            'rgb(118, 75, 162)',
+                            'rgb(255, 99, 132)',
+                            'rgb(255, 159, 64)',
+                            'rgb(75, 192, 192)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    {% endif %}
+</body>
+</html>
