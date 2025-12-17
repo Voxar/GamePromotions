@@ -97,7 +97,8 @@ def main():
                         getattr(game, 'valid_until', ''),
                         "discord",
                         getattr(game, 'original_price', None),
-                        getattr(game, 'price', None)
+                        getattr(game, 'price', None),
+                        getattr(game, 'store', None)
                     )
 
         # Add more destinations here

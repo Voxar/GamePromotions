@@ -82,9 +82,9 @@ class MongoDB:
         except PyMongoError as e:
             raise MongoDBError(f"Error checking if game is posted: {str(e)}")
     
-    def mark_game_as_posted(self, game_id: str, title: str, valid_until: str, service: str, original_price: float = None, discount_price: float = None) -> None:
+    def mark_game_as_posted(self, game_id: str, title: str, valid_until: str, service: str, original_price: float = None, discount_price: float = None, store: str = None) -> None:
         """Mark a game as posted for a specific promotion period, including price info.
-        
+
         Args:
             game_id: The unique identifier of the game.
             title: The title of the game.
@@ -92,6 +92,7 @@ class MongoDB:
             service: The service where the game was posted (e.g., 'discord').
             original_price: The original price of the game (optional).
             discount_price: The discounted price of the game (optional).
+            store: The store/platform name (e.g., 'Steam', 'Epic') (optional).
         """
         try:
             set_fields = {
@@ -105,6 +106,8 @@ class MongoDB:
                 set_fields["original_price"] = original_price
             if discount_price is not None:
                 set_fields["discount_price"] = discount_price
+            if store is not None:
+                set_fields["store"] = store
             self.posted_games.update_one(
                 {"game_id": game_id, "valid_until": valid_until, "service": service},
                 {

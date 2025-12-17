@@ -230,21 +230,28 @@ def aggregate_average_discount_over_time(games: List[Dict]) -> Dict[str, Dict[st
 
 def aggregate_games_by_store(games: List[Dict]) -> Dict[str, int]:
     """
-    Count games by store (extracted from game_id).
+    Count games by store (from store field or extracted from game_id URL).
     Returns: {"steam": count, "epic": count, ...}
     """
     store_counts = defaultdict(int)
 
     for game in games:
-        game_id = game.get('game_id', '')
-        if '_' in game_id:
-            store = game_id.split('_')[0]
+        # Prefer explicit store field if available
+        store = game.get('store')
+        if store:
             store_counts[store] += 1
+            continue
+
+        # Fall back to extracting from URL
+        game_id = game.get('game_id', '').lower()
+        if 'epicgames.com' in game_id or 'epic' in game_id:
+            store_counts['Epic'] += 1
+        elif 'steampowered.com' in game_id or 'steam' in game_id:
+            store_counts['Steam'] += 1
+        elif 'gog.com' in game_id:
+            store_counts['GOG'] += 1
         else:
-            # Try to get store from title or other field
-            title = game.get('title', '')
-            if title:
-                store_counts['unknown'] += 1
+            store_counts['Unknown'] += 1
 
     return dict(store_counts)
 
