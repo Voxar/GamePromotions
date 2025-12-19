@@ -9,7 +9,7 @@ import requests
 icon = "https://steamcommunity.com/favicon.ico"
 store = "Steam"
 
-def load_promoted_games(featured_url: str = "https://store.steampowered.com/api/featuredcategories") -> List[Game]:
+def load_promoted_games(featured_url: str = "https://store.steampowered.com/api/featuredcategories?l=english&cc=SE") -> List[Game]:
     response = requests.get(featured_url)
     return parse_steam_promoted_games(response.text)
 

@@ -3,8 +3,8 @@ name: Check Free Games
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Kör 08:00 UTC (10:00 svensk tid) varje dag
-  workflow_dispatch:  # Möjlighet att köra manuellt
+    - cron: '0 0/4 * * *'
+  workflow_dispatch:
 
 jobs:
   check-games:
