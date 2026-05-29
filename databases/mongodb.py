@@ -4,7 +4,7 @@ MongoDB database module for tracking posted games.
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 import logging
 
@@ -66,6 +66,38 @@ class MongoDB:
         except Exception as e:
             raise MongoDBError(f"Failed to connect to MongoDB: {str(e)}")
     
+    def games_without_current_promotion(self, game_ids: List[str]) -> List[str]:
+        """Return the subset of game_ids that have no active (unexpired) posting.
+
+        Lets sources skip expensive per-game enrichment for games we've already posted
+        with a promotion that hasn't yet ended. A game_id is considered "active" if any
+        stored record has a valid_until ISO8601 timestamp strictly in the future.
+        Records with missing/empty/unparseable valid_until are treated as expired so the
+        caller can re-evaluate them.
+        """
+        if not game_ids:
+            return []
+        try:
+            docs = self.posted_games.find(
+                {"game_id": {"$in": game_ids}},
+                {"game_id": 1, "valid_until": 1},
+            )
+            now = datetime.now(timezone.utc)
+            active: set = set()
+            for doc in docs:
+                vu = doc.get("valid_until") or ""
+                try:
+                    dt = datetime.fromisoformat(vu)
+                except ValueError:
+                    continue
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                if dt > now:
+                    active.add(doc["game_id"])
+            return [gid for gid in game_ids if gid not in active]
+        except PyMongoError as e:
+            raise MongoDBError(f"Error filtering games by current promotion: {str(e)}")
+
     def is_game_posted(self, game_id: str, valid_until: str, service: str) -> bool:
         """Check if a game has been posted for a specific promotion period.
         

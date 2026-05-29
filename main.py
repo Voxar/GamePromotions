@@ -33,6 +33,7 @@ def main():
     discord_webhooks = [e for e in (os.getenv("DISCORD_WEBHOOK_URL") or "").split(";") if len(e) > 0]
     epic_games_url = os.getenv("EPIC_GAMES_PROMOTIONS")
     steam_games_url = os.getenv("STEAM_PROMOTIONS")
+    gog_games_url = os.getenv("GOG_PROMOTIONS")
 
     db = None
     if os.getenv("MONGODB_URI"):
@@ -51,6 +52,12 @@ def main():
         logging.info("Loading Steam promotions from %s", steam_games_url)
         from sources.steam import load_promoted_games
         games.add(load_promoted_games(steam_games_url))
+
+    if gog_games_url:
+        logging.info("Loading GOG promotions from %s", gog_games_url)
+        from sources.gog import get_gog_promotions
+        filter_unposted = db.games_without_current_promotion if db else None
+        games.add(get_gog_promotions(gog_games_url, filter_unposted=filter_unposted))
 
     # Add more sources here
     
@@ -75,12 +82,16 @@ def main():
         if discord_webhooks and len(discord_webhooks) > 0:
             print("Sending to Discord", discord_webhooks)
             games_to_send = free + discounted
-            
-            if db: 
+
+            # A game without valid_until can't be deduplicated reliably and would
+            # be re-posted on every run. Drop them before posting or storing.
+            games_to_send = [g for g in games_to_send if getattr(g, 'valid_until', '')]
+
+            if db:
                 filtered_games = []
                 for game in games_to_send:
                     game_id = getattr(game, 'id', game.title)
-                    valid_until = getattr(game, 'valid_until', '')
+                    valid_until = game.valid_until
                     if not db.is_game_posted(game_id, valid_until, 'discord'):
                         filtered_games.append(game)
                 games_to_send = filtered_games
