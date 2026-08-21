@@ -3,6 +3,7 @@
 .gitignore
 
 # Python
+.venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -28,3 +29,10 @@ sample.json
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# Not needed at runtime (main.py is the only entrypoint)
+tests/
+samples/
+assets/
+.github/
+requirements-dev.txt

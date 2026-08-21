@@ -84,12 +84,41 @@ Required for operation:
 - `EPIC_GAMES_PROMOTIONS`: Epic Games API URL (has default)
 - `STEAM_PROMOTIONS`: Steam API URL (has default)
 
-## GitHub Actions
+## Deployment
 
-Workflow in `.github/workflows/run.yml`:
-- Runs daily at 08:00 UTC via cron schedule
-- Can be triggered manually via workflow_dispatch
-- Requires secrets: DISCORD_WEBHOOK_URL, MONGODB_URI, EPIC_GAMES_PROMOTIONS, STEAM_PROMOTIONS, SENTRY_DSN
+Runs on **raheth**, a shared server managed by Coolify (https://coolify.d.nevyn.dev), as a
+resource under the `Voxar` project. Build pack: docker-compose.
+
+The schedule lives **inside the container** — `crontab` is read by supercronic, started by
+`docker-entrypoint.sh`. Nothing is installed on the host and no host cron is used. The container
+is a long-running process (supercronic in the foreground), which is also what keeps Coolify's
+health check happy.
+
+- `crontab` — `0 */4 * * *`, six runs a day, UTC. Same cadence as the GHA schedule it replaced.
+- `RUN_ON_START=true` — fires one run at boot instead of waiting for the next slot. Useful to
+  verify a deploy; harmless because MongoDB dedupes.
+- Secrets are set as environment variables on the Coolify app, not committed.
+- supercronic is checksum-pinned in `deploy/supercronic.sha1` (amd64 + arm64).
+
+Shared-box rules that constrain this deployment: memory is capped in docker-compose.yml, the
+service must stay single-homed (no `networks:` block — a second network makes Traefik route to an
+unreachable IP), and data must live in named volumes since Coolify re-clones the repo per deploy.
+
+### GitHub Actions
+
+`.github/workflows/run.yml` still exists but its `schedule:` trigger is **commented out** —
+re-enabling it while the container runs would double-post. `workflow_dispatch` is kept as a
+manual fallback and still needs the repo secrets.
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests/ -q
+```
+
+`tests/test_scheduling.py` covers the crontab and entrypoint (stubbing `python`/`supercronic`).
+`tests/test_image.py` builds the real image and runs it — it auto-skips if docker is unavailable.
 
 ## Adding New Game Sources
 
@@ -128,8 +157,10 @@ To add a new destination:
 
 ## Notes
 
-- The Dockerfile references `epic_free_games.py` which doesn't exist - should be updated to `main.py`
-- No unit tests currently present
+- Sentry cron monitor slug is still `gha-gamepromotions` (see `main.py`) even though runs no
+  longer come from GHA; renaming it creates a fresh monitor in Sentry and loses check-in history
+- `config.yml` and `templates/` are not used by `main.py` (only `generate_stats.py`), so they are
+  deliberately not copied into the image
 - Game IDs are based on URL (see `game.py:id` property)
 - Price values stored as strings and parsed on demand
 - Discord embeds limited to 10 per message; code handles chunking automatically

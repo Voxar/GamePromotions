@@ -1,19 +1,20 @@
-version: '3.8'
-
 services:
-  epic-free-games:
+  gamepromotions:
     build: .
+    restart: unless-stopped
     environment:
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
-      - EPIC_GAMES_PROMOTIONS=${EPIC_GAMES_PROMOTIONS:-https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions}
-    # Uncomment to run on a schedule (e.g., every 6 hours)
-    # deploy:
-    #   restart_policy:
-    #     condition: on-failure
-    #     delay: 5s
-    #     max_attempts: 3
-    #     window: 120s
-    #   resources:
-    #     limits:
-    #       cpus: '0.5'
-    #       memory: 256M
+      # Set these in Coolify -> the app's Environment Variables.
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      MONGODB_URI: ${MONGODB_URI}
+      SENTRY_DSN: ${SENTRY_DSN}
+      EPIC_GAMES_PROMOTIONS: ${EPIC_GAMES_PROMOTIONS}
+      STEAM_PROMOTIONS: ${STEAM_PROMOTIONS}
+      GOG_PROMOTIONS: ${GOG_PROMOTIONS}
+      # Fire one run at boot instead of waiting up to 4h for the next slot.
+      RUN_ON_START: ${RUN_ON_START:-false}
+      TZ: UTC
+    deploy:
+      resources:
+        limits:
+          # Shared 24 GB box; the job is a handful of HTTP calls.
+          memory: 256M

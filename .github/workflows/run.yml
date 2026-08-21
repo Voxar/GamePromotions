@@ -2,8 +2,10 @@
 name: Check Free Games
 
 on:
-  schedule:
-    - cron: '0 0/4 * * *'
+  # Scheduled runs moved to the self-hosted container (supercronic, see crontab).
+  # Re-enabling this alongside the container would double-post.
+  # schedule:
+  #   - cron: '0 0/4 * * *'
   workflow_dispatch:
 
 jobs:
